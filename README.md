@@ -125,15 +125,15 @@ node_js_cicd_crud/
 
 ## 📸 Screenshots
 
-Add screenshots here:
+Heres are the screenshots :
 
-  `![Landing Page](screenshots/CRUD.PNG)`
+  `![Landing Page](frontend/screenshots/CRUD.PNG)`
 
-  `![Landing Page](screenshots/CRUD_2.PNG)`
+  `![Landing Page](frontend/screenshots/CRUD_2.PNG)`
 
-  `![Landing Page](screenshots/CRUD_3.PNG)`
+  `![Landing Page](frontend/screenshots/CRUD_3.PNG)`
 
-   `![Landing Page](screenshots/CRUD_4.PNG)`
+  `![Landing Page](frontend/screenshots/CRUD_4.PNG)`
 
 
 ##  Future Enhancements
