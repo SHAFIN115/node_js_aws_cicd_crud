@@ -1,157 +1,1046 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>User CRUD Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UserVault · User Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    input { margin: 5px; padding: 5px; }
-    button { margin: 5px; padding: 5px 10px; }
-    .hidden { display: none; }
-    .success { color: green; }
-    .error { color: red; }
-    li { margin: 5px 0; }
+    /* ============================================================
+       CSS CUSTOM PROPERTIES — Edit here to retheme the entire app
+       ============================================================ */
+    :root {
+      --color-bg:           #0a0a0f;
+      --color-surface:      #111118;
+      --color-surface-alt:  #16161f;
+      --color-border:       rgba(255,255,255,0.07);
+      --color-border-hover: rgba(255,255,255,0.15);
+
+      --color-primary:      #6c63ff;
+      --color-primary-glow: rgba(108,99,255,0.35);
+      --color-primary-dim:  rgba(108,99,255,0.12);
+      --color-accent:       #ff6584;
+      --color-accent-dim:   rgba(255,101,132,0.12);
+      --color-success:      #43e97b;
+      --color-success-dim:  rgba(67,233,123,0.12);
+      --color-error:        #ff6584;
+      --color-error-dim:    rgba(255,101,132,0.12);
+
+      --color-text:         #f0f0f8;
+      --color-text-muted:   #7b7b96;
+      --color-text-faint:   #3d3d52;
+
+      --font-display:       'Syne', sans-serif;
+      --font-body:          'DM Sans', sans-serif;
+
+      --radius-sm:          8px;
+      --radius-md:          14px;
+      --radius-lg:          20px;
+      --radius-xl:          28px;
+
+      --shadow-card:        0 8px 40px rgba(0,0,0,0.5);
+      --shadow-glow:        0 0 40px var(--color-primary-glow);
+
+      --transition-fast:    150ms cubic-bezier(0.4,0,0.2,1);
+      --transition-base:    250ms cubic-bezier(0.4,0,0.2,1);
+      --transition-slow:    400ms cubic-bezier(0.4,0,0.2,1);
+
+      /* Layout */
+      --card-width:         440px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { height: 100%; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient background blobs */
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(120px);
+      opacity: 0.25;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: var(--color-primary);
+      top: -200px; left: -200px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: var(--color-accent);
+      bottom: -150px; right: -150px;
+    }
+
+    /* ============================================================
+       LAYOUT WRAPPER
+       ============================================================ */
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: var(--card-width);
+    }
+
+    /* ============================================================
+       LOGO / BRAND
+       ============================================================ */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px var(--color-primary-glow);
+    }
+    .brand-name {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+      color: var(--color-text);
+    }
+    .brand-name span {
+      color: var(--color-primary);
+    }
+
+    /* ============================================================
+       CARD CONTAINER
+       ============================================================ */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      animation: cardIn var(--transition-slow) ease both;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(108,99,255,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       VIEWS (shown/hidden via JS)
+       ============================================================ */
+    .view { display: none; animation: fadeIn 250ms ease both; }
+    .view.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       TYPOGRAPHY HELPERS
+       ============================================================ */
+    .view-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      color: var(--color-text);
+    }
+    .view-subtitle {
+      font-size: 14px;
+      color: var(--color-text-muted);
+      margin-bottom: 28px;
+      font-weight: 300;
+    }
+
+    /* ============================================================
+       OPTIONS VIEW — landing two-button layout
+       ============================================================ */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .option-card {
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: border-color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+      text-align: center;
+    }
+    .option-card:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-dim);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3), 0 0 0 1px var(--color-primary);
+    }
+    .option-card:active { transform: translateY(0); }
+    .option-card .oc-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .option-card .oc-label {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .option-card .oc-desc {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    /* ============================================================
+       FORM ELEMENTS
+       ============================================================ */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 400;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+    .form-input::placeholder { color: var(--color-text-faint); }
+    .form-input:hover {
+      border-color: var(--color-border-hover);
+      background: #1a1a25;
+    }
+    .form-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-dim);
+      background: #1a1a25;
+    }
+    .form-input.error {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 3px var(--color-error-dim);
+    }
+
+    /* ============================================================
+       BUTTONS
+       ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 22px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    /* Primary */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-primary) 0%, #8b5cf6 100%);
+      color: #fff;
+      width: 100%;
+      margin-top: 8px;
+      box-shadow: 0 4px 20px var(--color-primary-glow);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 28px var(--color-primary-glow), 0 0 0 1px rgba(255,255,255,0.1);
+      filter: brightness(1.1);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: none;
+      box-shadow: none;
+    }
+
+    /* Ghost */
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+      padding: 11px 18px;
+    }
+    .btn-ghost:hover {
+      color: var(--color-text);
+      border-color: var(--color-border-hover);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* Danger ghost */
+    .btn-danger {
+      background: transparent;
+      color: var(--color-accent);
+      border: 1px solid var(--color-accent-dim);
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+    .btn-danger:hover {
+      background: var(--color-accent-dim);
+      border-color: var(--color-accent);
+    }
+
+    /* Spinner inside button */
+    .btn-spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    .btn.loading .btn-spinner { display: inline-block; }
+    .btn.loading .btn-text { opacity: 0.6; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============================================================
+       FORM ACTIONS ROW
+       ============================================================ */
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .form-actions .btn-primary { flex: 1; margin-top: 0; }
+
+    /* ============================================================
+       DIVIDER
+       ============================================================ */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: var(--color-text-faint);
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    /* ============================================================
+       TOAST / ALERT MESSAGES
+       ============================================================ */
+    .toast {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 400;
+      margin-bottom: 20px;
+      animation: fadeIn 200ms ease both;
+      border: 1px solid transparent;
+    }
+    .toast.visible { display: flex; }
+    .toast-icon { font-size: 18px; flex-shrink: 0; }
+    .toast.success {
+      background: var(--color-success-dim);
+      color: var(--color-success);
+      border-color: rgba(67,233,123,0.2);
+    }
+    .toast.error {
+      background: var(--color-error-dim);
+      color: var(--color-error);
+      border-color: rgba(255,101,132,0.2);
+    }
+
+    /* ============================================================
+       BACK LINK
+       ============================================================ */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: color var(--transition-fast);
+      background: none;
+      border: none;
+      font-family: var(--font-body);
+    }
+    .back-link:hover { color: var(--color-text); }
+    .back-link svg { transition: transform var(--transition-fast); }
+    .back-link:hover svg { transform: translateX(-3px); }
+
+    /* ============================================================
+       DASHBOARD VIEW
+       ============================================================ */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .user-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-primary-dim);
+      color: var(--color-primary);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 99px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-display);
+    }
+
+    /* Search bar */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-faint);
+      font-size: 15px;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 11px 16px 11px 40px;
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .search-input::placeholder { color: var(--color-text-faint); }
+    .search-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-dim);
+    }
+
+    /* User list */
+    .user-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .user-list::-webkit-scrollbar { width: 4px; }
+    .user-list::-webkit-scrollbar-track { background: transparent; }
+    .user-list::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+      animation: slideIn 200ms ease both;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .user-item:hover { border-color: var(--color-border-hover); background: #1a1a25; }
+
+    .user-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px var(--color-primary-glow);
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--color-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-email {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--color-text-muted);
+    }
+    .empty-state-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 14px; }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-surface-alt) 25%, #1e1e2e 50%, var(--color-surface-alt) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-md);
+      height: 66px;
+      border: 1px solid var(--color-border);
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Dashboard footer */
+    .dashboard-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--color-border);
+    }
+    .session-info {
+      font-size: 12px;
+      color: var(--color-text-faint);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .session-dot {
+      width: 7px; height: 7px;
+      background: var(--color-success);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--color-success);
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ============================================================
+       FOOTER NOTE
+       ============================================================ */
+    .page-footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--color-text-faint);
+    }
+    .page-footer a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    .page-footer a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 500px) {
+      body { padding: 16px; }
+      .card { padding: 24px 20px; border-radius: var(--radius-lg); }
+      .options-grid { grid-template-columns: 1fr; }
+      :root { --card-width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <h1>User CRUD (JWT Protected)</h1>
 
-  <!-- Initial Options -->
-  <div id="options">
-    <button onclick="showCreate()">Create User</button>
-    <button onclick="showLogin()">Login User</button>
-  </div>
+  <div class="app-wrapper">
 
-  <!-- Create User Form -->
-  <div id="createSection" class="hidden">
-    <h2>Create User</h2>
-    <input type="text" id="createName" placeholder="Name">
-    <input type="email" id="createEmail" placeholder="Email">
-    <input type="password" id="createPassword" placeholder="Password">
-    <button onclick="createUser()">Create User</button>
-    <button onclick="goBack()">Back</button>
-    <p id="createMsg"></p>
-  </div>
+    <!-- ── Brand ─────────────────────────────────────────── -->
+    <div class="brand">
+      <div class="brand-icon">🔐</div>
+      <div class="brand-name">User<span>Vault</span></div>
+    </div>
 
-  <!-- Login Form -->
-  <div id="loginSection" class="hidden">
-    <h2>Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <button onclick="goBack()">Back</button>
-    <p id="loginMsg"></p>
-  </div>
+    <!-- ── Card Shell ─────────────────────────────────────── -->
+    <div class="card">
 
-  <!-- Dashboard -->
-  <div id="dashboard" class="hidden">
-    <h2>All Users</h2>
-    <ul id="userList"></ul>
-  </div>
+      <!-- ═══════════════════════════════════════════
+           VIEW: Options (Landing)
+           ═══════════════════════════════════════════ -->
+      <div class="view active" id="view-options">
+        <div class="view-title">Welcome back</div>
+        <div class="view-subtitle">Manage your users with ease. What would you like to do?</div>
+
+        <div class="options-grid">
+          <div class="option-card" onclick="App.showView('create')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')App.showView('create')">
+            <span class="oc-icon">✨</span>
+            <div class="oc-label">Create User</div>
+            <div class="oc-desc">Register a new account</div>
+          </div>
+          <div class="option-card" onclick="App.showView('login')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')App.showView('login')">
+            <span class="oc-icon">🔑</span>
+            <div class="oc-label">Login</div>
+            <div class="oc-desc">Access your dashboard</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           VIEW: Create User
+           ═══════════════════════════════════════════ -->
+      <div class="view" id="view-create">
+        <button class="back-link" onclick="App.showView('options')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8.5 2.5L4 7l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+
+        <div class="view-title">Create Account</div>
+        <div class="view-subtitle">Fill in the details to register a new user.</div>
+
+        <!-- Alert toast -->
+        <div class="toast" id="create-toast">
+          <span class="toast-icon"></span>
+          <span class="toast-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="create-name">Full name</label>
+          <input class="form-input" id="create-name" type="text" placeholder="John Doe" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="create-email">Email address</label>
+          <input class="form-input" id="create-email" type="email" placeholder="john@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="create-password">Password</label>
+          <input class="form-input" id="create-password" type="password" placeholder="Min. 8 characters" autocomplete="new-password" />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="create-btn" onclick="App.createUser()">
+            <span class="btn-spinner"></span>
+            <span class="btn-text">Create User</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           VIEW: Login
+           ═══════════════════════════════════════════ -->
+      <div class="view" id="view-login">
+        <button class="back-link" onclick="App.showView('options')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8.5 2.5L4 7l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+
+        <div class="view-title">Sign In</div>
+        <div class="view-subtitle">Enter your credentials to access the dashboard.</div>
+
+        <div class="toast" id="login-toast">
+          <span class="toast-icon"></span>
+          <span class="toast-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email address</label>
+          <input class="form-input" id="login-email" type="email" placeholder="john@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="login-btn" onclick="App.login()">
+            <span class="btn-spinner"></span>
+            <span class="btn-text">Sign In →</span>
+          </button>
+        </div>
+
+        <div class="divider">or</div>
+        <button class="btn btn-ghost" style="width:100%" onclick="App.showView('create')">Don't have an account? Create one</button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           VIEW: Dashboard
+           ═══════════════════════════════════════════ -->
+      <div class="view" id="view-dashboard">
+        <div class="dashboard-header">
+          <div>
+            <div class="view-title" style="margin-bottom:2px">All Users</div>
+            <div class="view-subtitle" style="margin-bottom:0">Active directory members</div>
+          </div>
+          <div class="user-count-badge" id="user-count">0 users</div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="search-input" type="text" placeholder="Search by name or email…" oninput="App.filterUsers()" />
+        </div>
+
+        <!-- User list -->
+        <ul class="user-list" id="user-list"></ul>
+
+        <!-- Dashboard Footer -->
+        <div class="dashboard-footer">
+          <div class="session-info">
+            <div class="session-dot"></div>
+            Authenticated session
+          </div>
+          <button class="btn btn-danger" onclick="App.logout()">Sign out</button>
+        </div>
+      </div>
+
+    </div><!-- /card -->
+
+    <div class="page-footer">
+      UserVault · JWT-protected API &nbsp;·&nbsp;
+      <a href="#" onclick="return false">Docs</a>
+    </div>
+
+  </div><!-- /app-wrapper -->
+
 
   <script>
-    const API = 'http://localhost:3000/api';
-    let token = '';
+    /* ============================================================
+       APP CONFIGURATION
+       — Edit API_BASE to point to your backend.
+       ============================================================ */
+    const CONFIG = {
+      API_BASE: 'http://localhost:3000/api',
+      ENDPOINTS: {
+        register: '/auth/register',
+        login:    '/auth/login',
+        users:    '/users',
+      },
+    };
 
-    // ---------- Show Forms ----------
-    function showCreate() {
-      document.getElementById('options').classList.add('hidden');
-      document.getElementById('createSection').classList.remove('hidden');
-    }
+    /* ============================================================
+       STATE
+       ============================================================ */
+    const State = {
+      token:   '',
+      users:   [],    // raw users array from API
+      filtered: [],   // filtered subset for current search
+    };
 
-    function showLogin() {
-      document.getElementById('options').classList.add('hidden');
-      document.getElementById('loginSection').classList.remove('hidden');
-    }
+    /* ============================================================
+       API HELPERS
+       ============================================================ */
+    const API = {
+      _fetch(endpoint, options = {}) {
+        const url     = CONFIG.API_BASE + endpoint;
+        const headers = { 'Content-Type': 'application/json', ...options.headers };
+        if (State.token) headers['Authorization'] = `Bearer ${State.token}`;
+        return fetch(url, { ...options, headers });
+      },
 
-    function goBack() {
-      document.getElementById('createSection').classList.add('hidden');
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('options').classList.remove('hidden');
-    }
+      post(endpoint, body)  { return this._fetch(endpoint, { method: 'POST', body: JSON.stringify(body) }); },
+      get(endpoint)         { return this._fetch(endpoint); },
+    };
 
-    // ---------- Create User ----------
-    async function createUser() {
-      const name = document.getElementById('createName').value;
-      const email = document.getElementById('createEmail').value;
-      const password = document.getElementById('createPassword').value;
+    /* ============================================================
+       UI HELPERS
+       ============================================================ */
+    const UI = {
+      /* Show / hide a view by name */
+      showView(name) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        const target = document.getElementById(`view-${name}`);
+        if (target) { target.classList.add('active'); }
+      },
 
-      if (!name || !email || !password) {
-        document.getElementById('createMsg').textContent = "Please fill all fields!";
-        document.getElementById('createMsg').className = "error";
-        return;
-      }
+      /* Show a toast message inside a view */
+      toast(id, type, message) {
+        const el  = document.getElementById(id);
+        const icon = { success: '✅', error: '❌' };
+        el.className   = `toast ${type} visible`;
+        el.querySelector('.toast-icon').textContent = icon[type] || '';
+        el.querySelector('.toast-msg').textContent  = message;
+        // Auto-dismiss success toasts
+        if (type === 'success') {
+          clearTimeout(el._timer);
+          el._timer = setTimeout(() => el.classList.remove('visible'), 4000);
+        }
+      },
 
-      const res = await fetch(`${API}/auth/register`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ name, email, password })
-      });
+      hideToast(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('visible');
+      },
 
-      const data = await res.json();
+      /* Button loading state */
+      setLoading(btnId, loading) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        btn.classList.toggle('loading', loading);
+        btn.disabled = loading;
+      },
 
-      if (res.ok) {
-        document.getElementById('createMsg').textContent = "User created successfully ✅";
-        document.getElementById('createMsg').className = "success";
-        document.getElementById('createName').value = '';
-        document.getElementById('createEmail').value = '';
-        document.getElementById('createPassword').value = '';
-      } else {
-        document.getElementById('createMsg').textContent = data.message || "Error creating user";
-        document.getElementById('createMsg').className = "error";
-      }
-    }
+      /* Mark an input as invalid */
+      setInputError(id, hasError) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('error', hasError);
+      },
 
-    // ---------- Login ----------
-    async function login() {
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
+      /* Get trimmed value */
+      val(id) { return document.getElementById(id)?.value.trim() ?? ''; },
 
-      if (!email || !password) {
-        document.getElementById('loginMsg').textContent = "Please enter email and password!";
-        document.getElementById('loginMsg').className = "error";
-        return;
-      }
+      /* Clear inputs */
+      clearInputs(...ids) {
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.value = ''; el.classList.remove('error'); }
+        });
+      },
+    };
 
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, password })
-      });
+    /* ============================================================
+       USER LIST RENDERING
+       ============================================================ */
+    const UserList = {
+      render(users) {
+        const list = document.getElementById('user-list');
+        const countBadge = document.getElementById('user-count');
+        countBadge.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
 
-      const data = await res.json();
+        if (!users.length) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">👤</div>
+              <p>No users found.</p>
+            </div>`;
+          return;
+        }
 
-      if (res.ok) {
-        token = data.token;
-        document.getElementById('loginMsg').textContent = "Login successful ✅";
-        document.getElementById('loginMsg').className = "success";
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        getUsers();
-      } else {
-        document.getElementById('loginMsg').textContent = data.message || "Invalid credentials";
-        document.getElementById('loginMsg').className = "error";
-      }
-    }
+        list.innerHTML = users.map((u, i) => `
+          <li class="user-item" style="animation-delay:${i * 40}ms">
+            <div class="user-avatar">${this._initials(u.name)}</div>
+            <div class="user-info">
+              <div class="user-name">${this._esc(u.name)}</div>
+              <div class="user-email">${this._esc(u.email)}</div>
+            </div>
+          </li>`).join('');
+      },
 
-    // ---------- Get Users ----------
-    async function getUsers() {
-      if (!token) return;
+      renderSkeleton(count = 4) {
+        const list = document.getElementById('user-list');
+        list.innerHTML = Array.from({ length: count }, () =>
+          `<div class="skeleton"></div>`
+        ).join('');
+      },
 
-      const res = await fetch(`${API}/users`, {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
+      _initials(name = '') {
+        return name.split(' ').slice(0, 2).map(n => n[0]?.toUpperCase() ?? '').join('') || '?';
+      },
 
-      const users = await res.json();
-      const list = document.getElementById('userList');
-      list.innerHTML = '';
+      _esc(str = '') {
+        return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      },
+    };
 
-      users.forEach(u => {
-        const li = document.createElement('li');
-        li.textContent = `${u.name} (${u.email})`;
-        list.appendChild(li);
-      });
-    }
+    /* ============================================================
+       MAIN APP CONTROLLER
+       ============================================================ */
+    const App = {
+
+      showView(name) { UI.showView(name); },
+
+      /* ── Create User ──────────────────────────────────────── */
+      async createUser() {
+        UI.hideToast('create-toast');
+        const name     = UI.val('create-name');
+        const email    = UI.val('create-email');
+        const password = UI.val('create-password');
+
+        // Client-side validation
+        let hasError = false;
+        if (!name)     { UI.setInputError('create-name', true);     hasError = true; }
+        if (!email)    { UI.setInputError('create-email', true);    hasError = true; }
+        if (!password) { UI.setInputError('create-password', true); hasError = true; }
+        if (hasError)  { UI.toast('create-toast', 'error', 'Please fill in all required fields.'); return; }
+
+        UI.setLoading('create-btn', true);
+        try {
+          const res  = await API.post(CONFIG.ENDPOINTS.register, { name, email, password });
+          const data = await res.json();
+
+          if (res.ok) {
+            UI.toast('create-toast', 'success', 'Account created successfully! You can now sign in.');
+            UI.clearInputs('create-name', 'create-email', 'create-password');
+          } else {
+            UI.toast('create-toast', 'error', data.message || 'Failed to create user. Try again.');
+          }
+        } catch {
+          UI.toast('create-toast', 'error', 'Network error — is the API running?');
+        } finally {
+          UI.setLoading('create-btn', false);
+        }
+      },
+
+      /* ── Login ────────────────────────────────────────────── */
+      async login() {
+        UI.hideToast('login-toast');
+        const email    = UI.val('login-email');
+        const password = UI.val('login-password');
+
+        let hasError = false;
+        if (!email)    { UI.setInputError('login-email', true);    hasError = true; }
+        if (!password) { UI.setInputError('login-password', true); hasError = true; }
+        if (hasError)  { UI.toast('login-toast', 'error', 'Email and password are required.'); return; }
+
+        UI.setLoading('login-btn', true);
+        try {
+          const res  = await API.post(CONFIG.ENDPOINTS.login, { email, password });
+          const data = await res.json();
+
+          if (res.ok) {
+            State.token = data.token;
+            UI.clearInputs('login-email', 'login-password');
+            UI.showView('dashboard');
+            await this.loadUsers();
+          } else {
+            UI.toast('login-toast', 'error', data.message || 'Invalid credentials. Check and try again.');
+          }
+        } catch {
+          UI.toast('login-toast', 'error', 'Network error — is the API running?');
+        } finally {
+          UI.setLoading('login-btn', false);
+        }
+      },
+
+      /* ── Load Users ───────────────────────────────────────── */
+      async loadUsers() {
+        UserList.renderSkeleton();
+        try {
+          const res   = await API.get(CONFIG.ENDPOINTS.users);
+          const users = await res.json();
+          if (res.ok) {
+            State.users    = Array.isArray(users) ? users : [];
+            State.filtered = [...State.users];
+            UserList.render(State.filtered);
+          }
+        } catch {
+          document.getElementById('user-list').innerHTML =
+            `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Could not load users.</p></div>`;
+        }
+      },
+
+      /* ── Filter Users (search) ────────────────────────────── */
+      filterUsers() {
+        const q = UI.val('search-input').toLowerCase();
+        State.filtered = q
+          ? State.users.filter(u =>
+              u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q))
+          : [...State.users];
+        UserList.render(State.filtered);
+      },
+
+      /* ── Logout ───────────────────────────────────────────── */
+      logout() {
+        State.token   = '';
+        State.users   = [];
+        State.filtered = [];
+        document.getElementById('search-input').value = '';
+        document.getElementById('user-list').innerHTML = '';
+        UI.showView('options');
+      },
+    };
+
+    /* ============================================================
+       KEYBOARD SHORTCUTS
+       Enter key submits the active form
+       ============================================================ */
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const active = document.querySelector('.view.active');
+      if (!active) return;
+      const id = active.id;
+      if (id === 'view-create') App.createUser();
+      if (id === 'view-login')  App.login();
+    });
+
+    /* ============================================================
+       CLEAR input error on focus
+       ============================================================ */
+    document.querySelectorAll('.form-input').forEach(input => {
+      input.addEventListener('focus', () => input.classList.remove('error'));
+    });
   </script>
+
 </body>
 </html>
