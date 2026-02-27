@@ -14,6 +14,6 @@ router.get("/", getAllUsers);
 router.get("/:id", getUserById);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
-router.get("/", (req, res) => res.send("User route works ✅"));
+
 
 module.exports = router;
