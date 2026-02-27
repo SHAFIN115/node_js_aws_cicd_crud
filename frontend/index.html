@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>User CRUD Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input { margin: 5px; padding: 5px; }
+    button { margin: 5px; padding: 5px 10px; }
+    .hidden { display: none; }
+    .success { color: green; }
+    .error { color: red; }
+    li { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>User CRUD (JWT Protected)</h1>
+
+  <!-- Initial Options -->
+  <div id="options">
+    <button onclick="showCreate()">Create User</button>
+    <button onclick="showLogin()">Login User</button>
+  </div>
+
+  <!-- Create User Form -->
+  <div id="createSection" class="hidden">
+    <h2>Create User</h2>
+    <input type="text" id="createName" placeholder="Name">
+    <input type="email" id="createEmail" placeholder="Email">
+    <input type="password" id="createPassword" placeholder="Password">
+    <button onclick="createUser()">Create User</button>
+    <button onclick="goBack()">Back</button>
+    <p id="createMsg"></p>
+  </div>
+
+  <!-- Login Form -->
+  <div id="loginSection" class="hidden">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button onclick="goBack()">Back</button>
+    <p id="loginMsg"></p>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden">
+    <h2>All Users</h2>
+    <ul id="userList"></ul>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000/api';
+    let token = '';
+
+    // ---------- Show Forms ----------
+    function showCreate() {
+      document.getElementById('options').classList.add('hidden');
+      document.getElementById('createSection').classList.remove('hidden');
+    }
+
+    function showLogin() {
+      document.getElementById('options').classList.add('hidden');
+      document.getElementById('loginSection').classList.remove('hidden');
+    }
+
+    function goBack() {
+      document.getElementById('createSection').classList.add('hidden');
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('options').classList.remove('hidden');
+    }
+
+    // ---------- Create User ----------
+    async function createUser() {
+      const name = document.getElementById('createName').value;
+      const email = document.getElementById('createEmail').value;
+      const password = document.getElementById('createPassword').value;
+
+      if (!name || !email || !password) {
+        document.getElementById('createMsg').textContent = "Please fill all fields!";
+        document.getElementById('createMsg').className = "error";
+        return;
+      }
+
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('createMsg').textContent = "User created successfully ✅";
+        document.getElementById('createMsg').className = "success";
+        document.getElementById('createName').value = '';
+        document.getElementById('createEmail').value = '';
+        document.getElementById('createPassword').value = '';
+      } else {
+        document.getElementById('createMsg').textContent = data.message || "Error creating user";
+        document.getElementById('createMsg').className = "error";
+      }
+    }
+
+    // ---------- Login ----------
+    async function login() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        document.getElementById('loginMsg').textContent = "Please enter email and password!";
+        document.getElementById('loginMsg').className = "error";
+        return;
+      }
+
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        token = data.token;
+        document.getElementById('loginMsg').textContent = "Login successful ✅";
+        document.getElementById('loginMsg').className = "success";
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        getUsers();
+      } else {
+        document.getElementById('loginMsg').textContent = data.message || "Invalid credentials";
+        document.getElementById('loginMsg').className = "error";
+      }
+    }
+
+    // ---------- Get Users ----------
+    async function getUsers() {
+      if (!token) return;
+
+      const res = await fetch(`${API}/users`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      const users = await res.json();
+      const list = document.getElementById('userList');
+      list.innerHTML = '';
+
+      users.forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = `${u.name} (${u.email})`;
+        list.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
