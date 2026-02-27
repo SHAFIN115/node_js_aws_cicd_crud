@@ -127,13 +127,13 @@ node_js_cicd_crud/
 
 Heres are the screenshots :
 
-  `![Landing Page](frontend/screenshots/CRUD.PNG)`
+  ![Landing Page](frontend/screenshots/CRUD.PNG)
 
-  `![Landing Page](frontend/screenshots/CRUD_2.PNG)`
+  ![Landing Page](frontend/screenshots/CRUD_2.PNG)
 
-  `![Landing Page](frontend/screenshots/CRUD_3.PNG)`
+  ![Landing Page](frontend/screenshots/CRUD_3.PNG)
 
-  `![Landing Page](frontend/screenshots/CRUD_4.PNG)`
+  ![Landing Page](frontend/screenshots/CRUD_4.PNG)
 
 
 ##  Future Enhancements
