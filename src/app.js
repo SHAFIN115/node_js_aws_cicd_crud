@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/user.routes");
 
 app.use(express.json());
 
@@ -10,9 +11,7 @@ app.get("/", (req, res) => {
 });
 
 // Example inline user route
-app.get("/api/users", (req, res) => {
-  res.send("User route works ✅");
-});
+app.use("/api/users", userRoutes);
 // Auth routes
 app.use("/api/auth", authRoutes);
 
