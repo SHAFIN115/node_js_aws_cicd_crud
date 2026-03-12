@@ -62,13 +62,7 @@ JWT_SECRET=your_jwt_secret
 ```bash
 npm run dev
 ```
-
-5. **Open frontend:**
-
-* Open `frontend/index.html` in your browser
-  (or serve it via Express for same-origin requests)
-
----
+There the FE will be showing automatically
 
 ## 📁 Project Structure
 
