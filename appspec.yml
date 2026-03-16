@@ -1,17 +1,12 @@
 version: 0.0
 os: linux
-
 files:
   - source: /
-    destination: /home/ubuntu/nodeapp
-
+    destination: /home/ec2-user/node_js_aws_cicd_crud
 hooks:
   AfterInstall:
     - location: scripts/install.sh
-      timeout: 300
-      runas: ubuntu
-
+      runas: ec2-user
   ApplicationStart:
     - location: scripts/start.sh
-      timeout: 300
-      runas: ubuntu
+      runas: ec2-user
