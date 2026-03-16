@@ -8,6 +8,6 @@ chown -R ec2-user:ec2-user "$APP_DIR"
 
 echo "Installing dependencies..."
 cd "$APP_DIR"
-npm install --production
+npm install --omit=dev
 
 echo "Install complete."
