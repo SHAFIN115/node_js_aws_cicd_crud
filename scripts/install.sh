@@ -1,5 +1,13 @@
 #!/bin/bash
 set -e
 
-cd /home/ec2-user/node_js_aws_cicd_crud || exit 1
-npm install
+APP_DIR="/home/ec2-user/node_js_aws_cicd_crud"
+
+echo "Fixing ownership..."
+chown -R ec2-user:ec2-user "$APP_DIR"
+
+echo "Installing dependencies..."
+cd "$APP_DIR"
+npm install --production
+
+echo "Install complete."
